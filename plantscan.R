@@ -23,9 +23,9 @@ scan_ratio = function(filepath, cut.hue, min.hue=0.0, max.hue=1.0, min.sat=0.0, 
   return(c(sum(plant[,,1][!mask] < cut.hue), sum(plant[,,1][!mask] > cut.hue)))
 }
 
-ratio = scan_ratio('test001.jpg', cut.hue=0.175, min.hue=0.14, max.hue=0.3, min.sat=0.4, min.val=0.2)
+ratio = scan_ratio('~/project/plantscan/data/3dpi/test001.jpg', cut.hue=0.175, min.hue=0.14, max.hue=0.3, min.sat=0.4, min.val=0.2)
 
-dirs = list.dirs('~/project/plantscanner/data')
+dirs = list.dirs('~/project/plantscan/data')
 ratios = data.frame(file=character(), dir=character(), infected=integer(), healthy=integer())
 for(d in dirs[2:length(dirs)]) {
   for(f in list.files(d, pattern='.jpg', full.names=T)[1:7]) {
