@@ -1,6 +1,6 @@
 
 scan_ratio = function(filepath, cut.hue, min.hue=0.0, max.hue=1.0, min.sat=0.0, min.val=0.0) {
-  par(mfrow=c(1,2))
+
   plant = jpeg::readJPEG(filepath)
   res = dim(plant)
   plant.hsv = plant
@@ -15,26 +15,37 @@ scan_ratio = function(filepath, cut.hue, min.hue=0.0, max.hue=1.0, min.sat=0.0, 
   plant2[,,1][mask] = 1
   plant2[,,2][mask] = 1
   plant2[,,3][mask] = 1
+  png(paste0(filepath, '_res.png'), height=res[1], width=2*res[2])
+  par(mar=c(0,0,0,0))
+  par(mfrow=c(1,2))
   plot(1,1,xlim=c(1,res[2]),ylim=c(1,res[1]),asp=1,type='n',xaxs='i',yaxs='i',xaxt='n',yaxt='n',xlab='',ylab='',bty='n')
   rasterImage(plant2, 1, 1, res[2], res[1])
+  par(mar=c(4,4,2,0))
   hist(as.vector(plant.hsv[,,1][!mask]), breaks=c(0:255/255), col=hsv(0:255/255), border=hsv(0:255/255), xlim=c(min.hue, max.hue), main='Histogram', xlab='hue')
   abline(v=cut.hue)
+  dev.off()
   par(mfrow=c(1,1))
+  par(mar=c(0,0,0,0))
+  png(paste0(filepath, '_masked.png'), height=res[1], width=res[2])
+  plot(1,1,xlim=c(1,res[2]),ylim=c(1,res[1]),asp=1,type='n',xaxs='i',yaxs='i',xaxt='n',yaxt='n',xlab='',ylab='',bty='n')
+  rasterImage(plant2, 1, 1, res[2], res[1])
+  dev.off()
   return(c(sum(plant[,,1][!mask] < cut.hue), sum(plant[,,1][!mask] > cut.hue)))
 }
 
-ratio = scan_ratio('~/project/plantscan/data/3dpi/test001.jpg', cut.hue=0.175, min.hue=0.14, max.hue=0.3, min.sat=0.4, min.val=0.2)
+ratio = scan_ratio('~/project/plantscan/data/2dpi_wenig_Symptome/LRV_20220513_132744_01_001.mp4.01.jpg', cut.hue=0.175, min.hue=0.14, max.hue=0.3, min.sat=0.3, min.val=0.2)
 
 dirs = list.dirs('~/project/plantscan/data')
 ratios = data.frame(file=character(), dir=character(), infected=integer(), healthy=integer())
 for(d in dirs[2:length(dirs)]) {
-  for(f in list.files(d, pattern='.jpg', full.names=T)[1:7]) {
+  for(f in list.files(d, pattern='.jpg$', full.names=T)) {
     r = scan_ratio(f, cut.hue=0.175, min.hue=0.14, max.hue=0.3, min.sat=0.4, min.val=0.2)
-    ratios = rbind(ratios, list(file=f, dir=d, infected=r[1], healthy=r[2]))
+    ratios = rbind(ratios, list(file=substr(f, 1, nchar(f)-7), dir=d, infected=r[1], healthy=r[2]))
   }
 }
-plot(0, 0, type='n', xlim=c(1,7), ylim=range(c(ratios$infected, ratios$healthy)), log='y')
-lines(1:7, ratios$infected[1:7], col='orange')
-lines(1:7, ratios$infected[8:14], col='orange')
-lines(1:7, ratios$healthy[1:7], col='green')
-lines(1:7, ratios$healthy[8:14], col='green')
+par(mar=c(4,4,2,0))
+plot(0, 0, type='n', xlim=c(1,14), ylim=c(1, max(c(ratios$infected, ratios$healthy))), log='y')
+for(f in unique(ratios$file)) {
+  lines(1:14, ratios$infected[ratios$file == f][1:14], col='orange')
+  lines(1:14, ratios$healthy[ratios$file == f][1:14], col='green')
+}
